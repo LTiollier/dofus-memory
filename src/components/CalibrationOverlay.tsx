@@ -11,7 +11,8 @@ export const CalibrationOverlay = () => {
     setBottomRight,
     rows,
     cols,
-    rotation
+    rotation,
+    rotationX
   } = useGridStore();
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -178,7 +179,7 @@ export const CalibrationOverlay = () => {
                     '&:hover': {
                         bgcolor: 'rgba(33, 150, 243, 0.2)',
                     },
-                    transform: `rotate(${rotation}deg)`,
+                    transform: `rotateX(${rotationX}deg) rotateZ(${rotation}deg)`,
                     transformOrigin: 'center center'
                 }}
             >

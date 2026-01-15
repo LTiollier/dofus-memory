@@ -14,7 +14,9 @@ export const CalibrationControls = () => {
     setRows, 
     setCols,
     rotation,
-    setRotation
+    setRotation,
+    rotationX,
+    setRotationX
   } = useGridStore();
 
   return (
@@ -59,14 +61,26 @@ export const CalibrationControls = () => {
                     </Box>
                 </Box>
 
-                <Box sx={{ textAlign: 'center', minWidth: 120 }}>
-                     <Typography variant="caption" display="block">Rotation ({rotation}°)</Typography>
+                <Box sx={{ textAlign: 'center', minWidth: 100 }}>
+                     <Typography variant="caption" display="block">Rotation Z ({rotation}°)</Typography>
                      <Slider
                         size="small"
                         min={-90}
                         max={90}
                         value={rotation}
                         onChange={(_, v) => setRotation(v as number)}
+                        valueLabelDisplay="auto"
+                     />
+                </Box>
+
+                <Box sx={{ textAlign: 'center', minWidth: 100 }}>
+                     <Typography variant="caption" display="block">Rotation X ({rotationX}°)</Typography>
+                     <Slider
+                        size="small"
+                        min={0}
+                        max={80}
+                        value={rotationX}
+                        onChange={(_, v) => setRotationX(v as number)}
                         valueLabelDisplay="auto"
                      />
                 </Box>

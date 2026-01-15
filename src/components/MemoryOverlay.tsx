@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 
 export const MemoryOverlay = () => {
   const { cells } = useMemoryStore();
-  const { rows, cols, topLeft, bottomRight, rotation } = useGridStore();
+  const { rows, cols, topLeft, bottomRight, rotation, rotationX } = useGridStore();
 
   const width = bottomRight.x - topLeft.x;
   const height = bottomRight.y - topLeft.y;
@@ -19,7 +19,7 @@ export const MemoryOverlay = () => {
         height: `${height}%`,
         pointerEvents: 'none',
         zIndex: 20,
-        transform: `rotate(${rotation}deg)`,
+        transform: `rotateX(${rotationX}deg) rotateZ(${rotation}deg)`,
         transformOrigin: 'center center'
       }}
     >

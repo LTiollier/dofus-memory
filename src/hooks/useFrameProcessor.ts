@@ -7,7 +7,7 @@ import { monsterMatcher } from '@/utils/monsterMatcher';
 
 export const useFrameProcessor = () => {
   const { videoRef, status } = useStreamStore();
-  const { rows, cols, topLeft, bottomRight, isCalibrating, rotation } = useGridStore();
+  const { rows, cols, topLeft, bottomRight, isCalibrating, rotation, rotationX } = useGridStore();
   const { setCellKnown, resetMemory } = useMemoryStore();
   
   const processingRef = useRef<number>(0);
@@ -67,9 +67,13 @@ export const useFrameProcessor = () => {
       // Center of the grid for rotation
       const cx = startX + gridW / 2;
       const cy = startY + gridH / 2;
-      const rad = (rotation * Math.PI) / 180;
-      const cos = Math.cos(rad);
-      const sin = Math.sin(rad);
+      
+      const radZ = (rotation * Math.PI) / 180;
+      const cosZ = Math.cos(radZ);
+      const sinZ = Math.sin(radZ);
+      
+      const radX = (rotationX * Math.PI) / 180;
+      const cosX = Math.cos(radX);
 
       // Create a temporary canvas for data extraction
       // Using a small canvas reused for each cell to get pixel data
@@ -94,8 +98,15 @@ export const useFrameProcessor = () => {
           const dx = unrotatedCenterX - cx;
           const dy = unrotatedCenterY - cy;
           
-          const rotatedCenterX = cx + (dx * cos - dy * sin);
-          const rotatedCenterY = cy + (dx * sin + dy * cos);
+          // 1. Rotate Z
+          let rzx = dx * cosZ - dy * sinZ;
+          let rzy = dx * sinZ + dy * cosZ;
+          
+          // 2. Rotate X (Squash Y)
+          rzy = rzy * cosX;
+
+          const rotatedCenterX = cx + rzx;
+          const rotatedCenterY = cy + rzy;
 
           // We sample around this rotated center
           // Draw center of cell to canvas
@@ -128,20 +139,21 @@ export const useFrameProcessor = () => {
             // For matching, we want to capture a box around the rotated center.
             // Since we can't easily capture a rotated box, we capture an axis-aligned box 
             // centered on the rotated point.
-            // This might include some background if the rotation is steep, but for recognition it might be enough
-            // if the monster is centered.
             
+            // Note: The cell height on screen is also squashed by cosX
+            const displayCellH = cellH * cosX;
+
             const captureX = rotatedCenterX - cellW / 2;
-            const captureY = rotatedCenterY - cellH / 2;
+            const captureY = rotatedCenterY - displayCellH / 2;
 
             // Try to find a matching monster
-            const match = monsterMatcher.findMatch(video, captureX, captureY, cellW, cellH);
+            const match = monsterMatcher.findMatch(video, captureX, captureY, cellW, displayCellH);
 
             if (match) {
                setCellKnown(r, c, match.url);
             } else {
                // Fallback to capture the FULL cell image for display
-               const imageUrl = cropImage(video, captureX, captureY, cellW, cellH);
+               const imageUrl = cropImage(video, captureX, captureY, cellW, displayCellH);
                setCellKnown(r, c, imageUrl);
             }
           }
@@ -156,5 +168,5 @@ export const useFrameProcessor = () => {
     return () => {
       if (processingRef.current) cancelAnimationFrame(processingRef.current);
     };
-  }, [status, isCalibrating, videoRef, rows, cols, topLeft, bottomRight, setCellKnown, rotation]);
+  }, [status, isCalibrating, videoRef, rows, cols, topLeft, bottomRight, setCellKnown, rotation, rotationX]);
 };
