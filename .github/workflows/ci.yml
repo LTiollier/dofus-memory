@@ -28,3 +28,8 @@ jobs:
 
       - name: Build Project
         run: npm run build
+
+      - name: 'notify vercel'
+        uses: 'vercel/repository-dispatch/actions/status@v1'
+        with:
+          name: 'Vercel - dofus-memory: build-and-lint'
