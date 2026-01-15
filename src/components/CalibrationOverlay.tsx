@@ -16,8 +16,6 @@ export const CalibrationOverlay = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef<'tl' | 'br' | null>(null);
 
-  if (!isCalibrating) return null;
-
   const handleMouseDown = (corner: 'tl' | 'br') => (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -60,6 +58,8 @@ export const CalibrationOverlay = () => {
         window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isCalibrating, topLeft, bottomRight]);
+
+  if (!isCalibrating) return null;
 
   // Render Grid Lines
   const renderGridLines = () => {
