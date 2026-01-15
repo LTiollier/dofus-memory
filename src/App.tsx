@@ -1,5 +1,6 @@
-import { ThemeProvider, CssBaseline, Box, AppBar, Toolbar, Typography, Container, Paper } from '@mui/material';
+import { ThemeProvider, CssBaseline, Box, AppBar, Toolbar, Typography, Container } from '@mui/material';
 import { theme } from './theme';
+import { VideoSource } from '@/components/VideoSource';
 
 function App() {
   return (
@@ -14,16 +15,7 @@ function App() {
           </Toolbar>
         </AppBar>
         <Container component="main" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
-          <Paper sx={{ p: 4, textAlign: 'center' }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-              Bienvenue
-            </Typography>
-            <Typography variant="body1">
-              L'initialisation du projet est terminée.
-              <br />
-              Prêt pour le développement des fonctionnalités de capture et de mémoire.
-            </Typography>
-          </Paper>
+          <VideoSource />
         </Container>
       </Box>
     </ThemeProvider>
