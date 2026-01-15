@@ -3,15 +3,21 @@ import { useStreamStore } from '@/context/streamStore';
 import { useGridStore } from '@/context/gridStore';
 import { useMemoryStore } from '@/context/memoryStore';
 import { getPixelDiff, cropImage } from '@/utils/imageProcessing';
+import { monsterMatcher } from '@/utils/monsterMatcher';
 
 export const useFrameProcessor = () => {
   const { videoRef, status } = useStreamStore();
-  const { rows, cols, topLeft, bottomRight, isCalibrating } = useGridStore();
+  const { rows, cols, topLeft, bottomRight, isCalibrating, rotation } = useGridStore();
   const { setCellKnown, resetMemory } = useMemoryStore();
   
   const processingRef = useRef<number>(0);
   const closedStateRef = useRef<Map<string, Uint8ClampedArray>>(new Map());
   const lastScanRef = useRef<number>(0);
+
+  // Load matcher assets
+  useEffect(() => {
+    monsterMatcher.loadAssets();
+  }, []);
 
   // Reset when starting fresh or re-calibrating
   useEffect(() => {
@@ -57,6 +63,13 @@ export const useFrameProcessor = () => {
       
       const cellW = gridW / cols;
       const cellH = gridH / rows;
+      
+      // Center of the grid for rotation
+      const cx = startX + gridW / 2;
+      const cy = startY + gridH / 2;
+      const rad = (rotation * Math.PI) / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
 
       // Create a temporary canvas for data extraction
       // Using a small canvas reused for each cell to get pixel data
@@ -73,15 +86,23 @@ export const useFrameProcessor = () => {
         for (let c = 0; c < cols; c++) {
           const id = `${r}-${c}`;
           
-          // Calculate cell center for sampling
-          const cellX = startX + c * cellW;
-          const cellY = startY + r * cellH;
+          // Calculate UNROTATED cell center for sampling
+          const unrotatedCenterX = startX + c * cellW + cellW / 2;
+          const unrotatedCenterY = startY + r * cellH + cellH / 2;
           
+          // Rotate this point around the grid center (cx, cy)
+          const dx = unrotatedCenterX - cx;
+          const dy = unrotatedCenterY - cy;
+          
+          const rotatedCenterX = cx + (dx * cos - dy * sin);
+          const rotatedCenterY = cy + (dx * sin + dy * cos);
+
+          // We sample around this rotated center
           // Draw center of cell to canvas
           ctx.drawImage(
             video, 
-            cellX + (cellW / 2) - (sampleSize / 2), 
-            cellY + (cellH / 2) - (sampleSize / 2), 
+            rotatedCenterX - (sampleSize / 2), 
+            rotatedCenterY - (sampleSize / 2), 
             sampleSize, sampleSize, 
             0, 0, sampleSize, sampleSize
           );
@@ -103,10 +124,26 @@ export const useFrameProcessor = () => {
           // Needs tuning. 30-50 usually good for distinct colors.
           if (diff > 40) {
             // It's different from closed state!
-            // Capture the FULL cell image for display
-            // We use a separate larger canvas/crop function for the visual
-            const imageUrl = cropImage(video, cellX, cellY, cellW, cellH);
-            setCellKnown(r, c, imageUrl);
+            
+            // For matching, we want to capture a box around the rotated center.
+            // Since we can't easily capture a rotated box, we capture an axis-aligned box 
+            // centered on the rotated point.
+            // This might include some background if the rotation is steep, but for recognition it might be enough
+            // if the monster is centered.
+            
+            const captureX = rotatedCenterX - cellW / 2;
+            const captureY = rotatedCenterY - cellH / 2;
+
+            // Try to find a matching monster
+            const match = monsterMatcher.findMatch(video, captureX, captureY, cellW, cellH);
+
+            if (match) {
+               setCellKnown(r, c, match.url);
+            } else {
+               // Fallback to capture the FULL cell image for display
+               const imageUrl = cropImage(video, captureX, captureY, cellW, cellH);
+               setCellKnown(r, c, imageUrl);
+            }
           }
         }
       }
@@ -119,5 +156,5 @@ export const useFrameProcessor = () => {
     return () => {
       if (processingRef.current) cancelAnimationFrame(processingRef.current);
     };
-  }, [status, isCalibrating, videoRef, rows, cols, topLeft, bottomRight, setCellKnown]);
+  }, [status, isCalibrating, videoRef, rows, cols, topLeft, bottomRight, setCellKnown, rotation]);
 };
