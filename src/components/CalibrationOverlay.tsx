@@ -15,6 +15,7 @@ export const CalibrationOverlay = () => {
   } = useGridStore();
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dragMode, setDragMode] = React.useState<'tl' | 'br' | 'move' | null>(null);
   const isDragging = useRef<'tl' | 'br' | 'move' | null>(null);
   const lastMousePos = useRef<{x: number, y: number} | null>(null);
 
@@ -26,10 +27,11 @@ export const CalibrationOverlay = () => {
     e.preventDefault();
     e.stopPropagation();
     isDragging.current = mode;
+    setDragMode(mode);
     lastMousePos.current = { x: e.clientX, y: e.clientY };
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = React.useCallback((e: MouseEvent) => {
     if (!isDragging.current || !containerRef.current || !lastMousePos.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
@@ -48,12 +50,12 @@ export const CalibrationOverlay = () => {
     lastMousePos.current = { x: e.clientX, y: e.clientY };
 
     if (isDragging.current === 'move') {
-        const newTlX = Math.max(0, Math.min(100 - (bottomRight.x - topLeft.x), topLeft.x + deltaXPercent));
-        const newTlY = Math.max(0, Math.min(100 - (bottomRight.y - topLeft.y), topLeft.y + deltaYPercent));
-        
         const width = bottomRight.x - topLeft.x;
         const height = bottomRight.y - topLeft.y;
 
+        const newTlX = Math.max(0, Math.min(100 - width, topLeft.x + deltaXPercent));
+        const newTlY = Math.max(0, Math.min(100 - height, topLeft.y + deltaYPercent));
+        
         setTopLeft({ x: newTlX, y: newTlY });
         setBottomRight({ x: newTlX + width, y: newTlY + height });
     } else if (isDragging.current === 'tl') {
@@ -66,12 +68,13 @@ export const CalibrationOverlay = () => {
         const newY = Math.max(yPercent, topLeft.y + 5);
         setBottomRight({ x: newX, y: newY });
     }
-  };
+  }, [bottomRight, setBottomRight, setTopLeft, topLeft]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = React.useCallback(() => {
     isDragging.current = null;
+    setDragMode(null);
     lastMousePos.current = null;
-  };
+  }, []);
 
   useEffect(() => {
     if (isCalibrating) {
@@ -82,7 +85,7 @@ export const CalibrationOverlay = () => {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isCalibrating, topLeft, bottomRight]);
+  }, [isCalibrating, handleMouseMove, handleMouseUp]);
 
   if (!isCalibrating) return null;
 
@@ -139,7 +142,7 @@ export const CalibrationOverlay = () => {
             width: '100%', 
             height: '100%', 
             zIndex: 10,
-            cursor: isDragging.current ? 'grabbing' : 'default',
+            cursor: dragMode ? 'grabbing' : 'default',
         }}
     >
         {/* Rotated Container for Grid and Handles */}

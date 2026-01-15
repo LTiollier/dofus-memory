@@ -4,6 +4,13 @@ import { useStreamStore } from '@/context/streamStore';
 export const useScreenCapture = () => {
   const { setStream, setStatus, setError, reset, stream } = useStreamStore();
 
+  const stopCapture = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    reset();
+  }, [stream, reset]);
+
   const startCapture = useCallback(async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getDisplayMedia({
@@ -27,14 +34,7 @@ export const useScreenCapture = () => {
       setError(err instanceof Error ? err.message : 'Unknown error during screen capture');
       setStatus('error');
     }
-  }, [setStream, setStatus, setError]);
-
-  const stopCapture = useCallback(() => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-    reset();
-  }, [stream, reset]);
+  }, [setStream, setStatus, setError, stopCapture]);
 
   return { startCapture, stopCapture };
 };
