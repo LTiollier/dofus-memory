@@ -99,7 +99,7 @@ export const useFrameProcessor = () => {
           const dy = unrotatedCenterY - cy;
           
           // 1. Rotate Z
-          let rzx = dx * cosZ - dy * sinZ;
+          const rzx = dx * cosZ - dy * sinZ;
           let rzy = dx * sinZ + dy * cosZ;
           
           // 2. Rotate X (Squash Y)
