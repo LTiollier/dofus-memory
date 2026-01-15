@@ -14,16 +14,18 @@ export const CalibrationOverlay = () => {
   } = useGridStore();
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef<'tl' | 'br' | null>(null);
+  const isDragging = useRef<'tl' | 'br' | 'move' | null>(null);
+  const lastMousePos = useRef<{x: number, y: number} | null>(null);
 
-  const handleMouseDown = (corner: 'tl' | 'br') => (e: React.MouseEvent) => {
+  const handleMouseDown = (mode: 'tl' | 'br' | 'move') => (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    isDragging.current = corner;
+    isDragging.current = mode;
+    lastMousePos.current = { x: e.clientX, y: e.clientY };
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging.current || !containerRef.current) return;
+    if (!isDragging.current || !containerRef.current || !lastMousePos.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
     const x = Math.min(Math.max(0, e.clientX - rect.left), rect.width);
@@ -31,13 +33,30 @@ export const CalibrationOverlay = () => {
     
     const xPercent = (x / rect.width) * 100;
     const yPercent = (y / rect.height) * 100;
+    
+    // Calculate delta for move
+    const deltaXPixels = e.clientX - lastMousePos.current.x;
+    const deltaYPixels = e.clientY - lastMousePos.current.y;
+    const deltaXPercent = (deltaXPixels / rect.width) * 100;
+    const deltaYPercent = (deltaYPixels / rect.height) * 100;
 
-    if (isDragging.current === 'tl') {
+    lastMousePos.current = { x: e.clientX, y: e.clientY };
+
+    if (isDragging.current === 'move') {
+        const newTlX = Math.max(0, Math.min(100 - (bottomRight.x - topLeft.x), topLeft.x + deltaXPercent));
+        const newTlY = Math.max(0, Math.min(100 - (bottomRight.y - topLeft.y), topLeft.y + deltaYPercent));
+        
+        const width = bottomRight.x - topLeft.x;
+        const height = bottomRight.y - topLeft.y;
+
+        setTopLeft({ x: newTlX, y: newTlY });
+        setBottomRight({ x: newTlX + width, y: newTlY + height });
+    } else if (isDragging.current === 'tl') {
         // Prevent crossing
         const newX = Math.min(xPercent, bottomRight.x - 5);
         const newY = Math.min(yPercent, bottomRight.y - 5);
         setTopLeft({ x: newX, y: newY });
-    } else {
+    } else if (isDragging.current === 'br') {
         const newX = Math.max(xPercent, topLeft.x + 5);
         const newY = Math.max(yPercent, topLeft.y + 5);
         setBottomRight({ x: newX, y: newY });
@@ -46,6 +65,7 @@ export const CalibrationOverlay = () => {
 
   const handleMouseUp = () => {
     isDragging.current = null;
+    lastMousePos.current = null;
   };
 
   useEffect(() => {
@@ -118,8 +138,9 @@ export const CalibrationOverlay = () => {
             cursor: isDragging.current ? 'grabbing' : 'default'
         }}
     >
-        {/* Selection Area Border */}
+        {/* Selection Area Border & Move Handler */}
         <Box
+            onMouseDown={handleMouseDown('move')}
             sx={{
                 position: 'absolute',
                 left: `${topLeft.x}%`,
@@ -128,7 +149,10 @@ export const CalibrationOverlay = () => {
                 height: `${bottomRight.y - topLeft.y}%`,
                 border: '2px solid #2196f3',
                 bgcolor: 'rgba(33, 150, 243, 0.1)',
-                pointerEvents: 'none'
+                cursor: 'move', // Cursor indicating it can be moved
+                '&:hover': {
+                    bgcolor: 'rgba(33, 150, 243, 0.2)',
+                }
             }}
         />
 
