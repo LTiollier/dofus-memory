@@ -1,5 +1,5 @@
 import { useGridStore } from '@/context/gridStore';
-import { Box, Button, TextField, Typography, Paper, IconButton } from '@mui/material';
+import { Box, Button, Typography, Paper, IconButton, Slider } from '@mui/material';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import CheckIcon from '@mui/icons-material/Check';
 import AddIcon from '@mui/icons-material/Add';
@@ -12,7 +12,9 @@ export const CalibrationControls = () => {
     rows, 
     cols, 
     setRows, 
-    setCols 
+    setCols,
+    rotation,
+    setRotation
   } = useGridStore();
 
   return (
@@ -30,7 +32,7 @@ export const CalibrationControls = () => {
         </Box>
 
         {isCalibrating && (
-            <Box sx={{ display: 'flex', gap: 4 }}>
+            <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="caption" display="block">Lignes</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -55,6 +57,18 @@ export const CalibrationControls = () => {
                             <AddIcon />
                         </IconButton>
                     </Box>
+                </Box>
+
+                <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+                     <Typography variant="caption" display="block">Rotation ({rotation}°)</Typography>
+                     <Slider
+                        size="small"
+                        min={-90}
+                        max={90}
+                        value={rotation}
+                        onChange={(_, v) => setRotation(v as number)}
+                        valueLabelDisplay="auto"
+                     />
                 </Box>
             </Box>
         )}
