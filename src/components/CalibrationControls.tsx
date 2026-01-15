@@ -1,0 +1,70 @@
+import { useGridStore } from '@/context/gridStore';
+import { Box, Button, TextField, Typography, Paper, IconButton } from '@mui/material';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import CheckIcon from '@mui/icons-material/Check';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+
+export const CalibrationControls = () => {
+  const { 
+    isCalibrating, 
+    setIsCalibrating, 
+    rows, 
+    cols, 
+    setRows, 
+    setCols 
+  } = useGridStore();
+
+  return (
+    <Paper sx={{ p: 2, mt: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button
+                variant={isCalibrating ? "contained" : "outlined"}
+                color={isCalibrating ? "success" : "primary"}
+                startIcon={isCalibrating ? <CheckIcon /> : <GridOnIcon />}
+                onClick={() => setIsCalibrating(!isCalibrating)}
+            >
+                {isCalibrating ? "Terminer la Calibration" : "Calibrer la Grille"}
+            </Button>
+        </Box>
+
+        {isCalibrating && (
+            <Box sx={{ display: 'flex', gap: 4 }}>
+                <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" display="block">Lignes</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <IconButton size="small" onClick={() => setRows(Math.max(2, rows - 1))}>
+                            <RemoveIcon />
+                        </IconButton>
+                        <Typography sx={{ mx: 1, minWidth: 20 }}>{rows}</Typography>
+                        <IconButton size="small" onClick={() => setRows(Math.min(10, rows + 1))}>
+                            <AddIcon />
+                        </IconButton>
+                    </Box>
+                </Box>
+
+                <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" display="block">Colonnes</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <IconButton size="small" onClick={() => setCols(Math.max(2, cols - 1))}>
+                            <RemoveIcon />
+                        </IconButton>
+                        <Typography sx={{ mx: 1, minWidth: 20 }}>{cols}</Typography>
+                        <IconButton size="small" onClick={() => setCols(Math.min(10, cols + 1))}>
+                            <AddIcon />
+                        </IconButton>
+                    </Box>
+                </Box>
+            </Box>
+        )}
+      </Box>
+      
+      {isCalibrating && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Ajustez le cadre bleu sur la grille de jeu en déplaçant les coins. Modifiez le nombre de lignes et colonnes pour correspondre.
+        </Typography>
+      )}
+    </Paper>
+  );
+};
