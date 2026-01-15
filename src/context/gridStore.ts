@@ -24,13 +24,13 @@ interface GridState {
 }
 
 export const useGridStore = create<GridState>((set) => ({
-  rows: 6,
-  cols: 4,
+  rows: 4,
+  cols: 6,
   topLeft: { x: 10, y: 10 },
   bottomRight: { x: 90, y: 90 },
   isCalibrating: false,
-  rotation: 0,
-  rotationX: 0,
+  rotation: 42,
+  rotationX: 60,
   setRows: (rows) => set({ rows }),
   setCols: (cols) => set({ cols }),
   setTopLeft: (topLeft) => set({ topLeft }),
@@ -39,12 +39,12 @@ export const useGridStore = create<GridState>((set) => ({
   setRotation: (rotation) => set({ rotation }),
   setRotationX: (rotationX) => set({ rotationX }),
   resetGrid: () => set({ 
-    rows: 6, 
-    cols: 4, 
+    rows: 4, 
+    cols: 6, 
     topLeft: { x: 10, y: 10 }, 
     bottomRight: { x: 90, y: 90 }, 
     isCalibrating: false,
-    rotation: 0,
-    rotationX: 0
+    rotation: 42,
+    rotationX: 60
   }),
 }));
