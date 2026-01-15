@@ -20,10 +20,10 @@ interface GridState {
 }
 
 export const useGridStore = create<GridState>((set) => ({
-  rows: 4,
+  rows: 6,
   cols: 4,
   topLeft: { x: 10, y: 10 },
-  bottomRight: { x: 90, y: 90 }, // Using percentages for responsiveness by default? Or pixels? Let's assume percentages for initial default, but we'll likely need pixel logic for precision. Let's stick to percentages for now as it's easier to overlay on a responsive video element.
+  bottomRight: { x: 90, y: 90 },
   isCalibrating: false,
   setRows: (rows) => set({ rows }),
   setCols: (cols) => set({ cols }),
@@ -31,7 +31,7 @@ export const useGridStore = create<GridState>((set) => ({
   setBottomRight: (bottomRight) => set({ bottomRight }),
   setIsCalibrating: (isCalibrating) => set({ isCalibrating }),
   resetGrid: () => set({ 
-    rows: 4, 
+    rows: 6, 
     cols: 4, 
     topLeft: { x: 10, y: 10 }, 
     bottomRight: { x: 90, y: 90 }, 
